@@ -8,12 +8,10 @@ import 'package:yaml/yaml.dart';
 import 'package:path/path.dart' as path;
 import 'package:jinja/jinja.dart';
 
-final rootDir = path
-    .canonicalize(path.join(path.dirname(path.fromUri(Platform.script)), '..'));
+final rootDir = path.canonicalize(path.join(path.dirname(path.fromUri(Platform.script)), '..'));
 
 // NB: there has got to be a better way to do this
-final appDir = path.canonicalize(
-    path.join(path.dirname(path.fromUri(Platform.packageConfig!)), '..'));
+final appDir = path.canonicalize(path.join(path.dirname(path.fromUri(Platform.packageConfig!)), '..'));
 
 final pubspecYaml = path.join(appDir, 'pubspec.yaml');
 
@@ -64,8 +62,7 @@ String? canonicalizePubspecPath(String? relativePath) {
     return relativePath;
   }
 
-  if (relativePath.startsWith('http://') ||
-      relativePath.startsWith('https://')) {
+  if (relativePath.startsWith('http://') || relativePath.startsWith('https://')) {
     return relativePath;
   }
 
@@ -74,8 +71,7 @@ String? canonicalizePubspecPath(String? relativePath) {
 
 String? generateSigningParams(String? certificateFile) {
   final certPass = Platform.environment['SQUIRREL_CERT_PASSWORD'];
-  final overrideParams =
-      Platform.environment['SQUIRREL_OVERRIDE_SIGNING_PARAMS'];
+  final overrideParams = Platform.environment['SQUIRREL_OVERRIDE_SIGNING_PARAMS'];
 
   if (overrideParams != null) {
     return overrideParams;
@@ -84,8 +80,7 @@ String? generateSigningParams(String? certificateFile) {
   if (certPass == null) {
     if (certificateFile == null) return null;
 
-    throw Exception(
-        'You must set either the SQUIRREL_CERT_PASSWORD or the SQUIRREL_OVERRIDE_SIGNING_PARAMS environment variable');
+    throw Exception('You must set either the SQUIRREL_CERT_PASSWORD or the SQUIRREL_OVERRIDE_SIGNING_PARAMS environment variable');
   }
 
   return '/a /f \"$certificateFile\" /p $certPass /v /fd sha256 /tr http://timestamp.digicert.com /td sha256';
@@ -97,6 +92,7 @@ class PubspecParams {
   final String name;
   final String title;
   final String version;
+  final String customVersion;
   final String authors;
   final String description;
   final String appIcon;
@@ -110,22 +106,8 @@ class PubspecParams {
   final bool buildEnterpriseMsiPackage;
   final bool dontBuildDeltas;
 
-  PubspecParams(
-      this.name,
-      this.title,
-      this.version,
-      this.authors,
-      this.description,
-      this.appIcon,
-      this.certificateFile,
-      this.overrideSigningParameters,
-      this.loadingGif,
-      this.uninstallIconPngUrl,
-      this.setupIcon,
-      this.releaseDirectory,
-      this.releaseUrl,
-      this.buildEnterpriseMsiPackage,
-      this.dontBuildDeltas);
+  PubspecParams(this.name, this.title, this.version, this.customVersion, this.authors, this.description, this.appIcon, this.certificateFile, this.overrideSigningParameters, this.loadingGif,
+      this.uninstallIconPngUrl, this.setupIcon, this.releaseDirectory, this.releaseUrl, this.buildEnterpriseMsiPackage, this.dontBuildDeltas);
 
   factory PubspecParams.fromYaml(dynamic appPubspec) {
     dynamic windowsSection = appPubspec['squirrel']['windows'];
@@ -135,68 +117,51 @@ class PubspecParams {
     }
 
     final name = appPubspec['name'].toString();
-    final title = stringOrThrow(
-        windowsSection['appFriendlyName'] ?? appPubspec['title'],
-        'Your app needs a description!');
+    final title = stringOrThrow(windowsSection['appFriendlyName'] ?? appPubspec['title'], 'Your app needs a description!');
     final version = parseVersion(appPubspec['version']);
+    final customVersion = appPubspec['version'].toString();
     final authors = parseAuthor(appPubspec['authors']);
-    final description = stringOrThrow(windowsSection['appDescription'] ?? title,
-        'Your app must have a description');
-    final appIcon = canonicalizePubspecPath(stringOrThrow(
-        windowsSection['appIcon'], 'Your app must have an icon'))!;
-    final certificateFile =
-        canonicalizePubspecPath(windowsSection['certificateFile']?.toString());
-    final overrideSigningParameters =
-        windowsSection['overrideSigningParameters']?.toString() ??
-            generateSigningParams(certificateFile);
-    final loadingGif = canonicalizePubspecPath((windowsSection['loadingGif'] ??
-            path.join(rootDir, 'vendor', 'default-loading.gif'))
-        .toString())!;
-    final uninstallIconPngUrl =
-        (windowsSection['uninstallIconPngUrl'] ?? defaultUninstallPngUrl)
-            .toString();
-    final setupIcon = canonicalizePubspecPath(
-        (windowsSection['setupIcon'] ?? appIcon).toString());
-    final releaseDirectory = canonicalizePubspecPath(
-        windowsSection['releaseDirectory']?.toString() ??
-            path.join(appDir, 'build'))!;
-    final releaseUrl = canonicalizePubspecPath((windowsSection['releaseUrl'] ??
-            Platform.environment['SQUIRREL_RELEASE_URL'])
-        .toString());
-    final buildEnterpriseMsiPackage =
-        windowsSection['buildEnterpriseMsiPackage'] == true ? true : false;
-    final dontBuildDeltas =
-        windowsSection['dontBuildDeltas'] == true ? true : false;
+    final description = stringOrThrow(windowsSection['appDescription'] ?? title, 'Your app must have a description');
+    final appIcon = canonicalizePubspecPath(stringOrThrow(windowsSection['appIcon'], 'Your app must have an icon'))!;
+    final certificateFile = canonicalizePubspecPath(windowsSection['certificateFile']?.toString());
+    final overrideSigningParameters = windowsSection['overrideSigningParameters']?.toString() ?? generateSigningParams(certificateFile);
+    final loadingGif = canonicalizePubspecPath((windowsSection['loadingGif'] ?? path.join(rootDir, 'vendor', 'default-loading.gif')).toString())!;
+    final uninstallIconPngUrl = (windowsSection['uninstallIconPngUrl'] ?? defaultUninstallPngUrl).toString();
+    final setupIcon = canonicalizePubspecPath((windowsSection['setupIcon'] ?? appIcon).toString());
+    final releaseDirectory = canonicalizePubspecPath(windowsSection['releaseDirectory']?.toString() ?? path.join(appDir, 'build'))!;
+    final releaseUrl = canonicalizePubspecPath((windowsSection['releaseUrl'] ?? Platform.environment['SQUIRREL_RELEASE_URL']).toString());
+    final buildEnterpriseMsiPackage = windowsSection['buildEnterpriseMsiPackage'] == true ? true : false;
+    final dontBuildDeltas = windowsSection['dontBuildDeltas'] == true ? true : false;
 
     if (certificateFile != null && overrideSigningParameters != null) {}
 
     return PubspecParams(
-        name,
-        title,
-        version,
-        authors,
-        description,
-        appIcon,
-        certificateFile,
-        overrideSigningParameters,
-        loadingGif,
-        uninstallIconPngUrl,
-        setupIcon,
-        releaseDirectory,
-        releaseUrl,
-        buildEnterpriseMsiPackage,
-        dontBuildDeltas);
+      name,
+      title,
+      version,
+      customVersion,
+      authors,
+      description,
+      appIcon,
+      certificateFile,
+      overrideSigningParameters,
+      loadingGif,
+      uninstallIconPngUrl,
+      setupIcon,
+      releaseDirectory,
+      releaseUrl,
+      buildEnterpriseMsiPackage,
+      dontBuildDeltas,
+    );
   }
 }
 
-Future<ProcessResult> runUtil(String name, List<String> args,
-    {String? cwd}) async {
+Future<ProcessResult> runUtil(String name, List<String> args, {String? cwd}) async {
   final cmd = path.join(rootDir, 'vendor', name);
   final ret = await Process.run(cmd, args, workingDirectory: cwd);
 
   if (ret.exitCode != 0) {
-    final msg =
-        "Failed to run $cmd ${args.join(' ')}\n${ret.stdout}\n${ret.stderr}";
+    final msg = "Failed to run $cmd ${args.join(' ')}\n${ret.stdout}\n${ret.stderr}";
     throw Exception(msg);
   }
 
@@ -206,12 +171,10 @@ Future<ProcessResult> runUtil(String name, List<String> args,
 Future<int> main(List<String> args) async {
   final yaml = loadYaml(await File(pubspecYaml).readAsString());
 
-  final template = Environment().fromString(
-      await File(path.join(rootDir, 'nuspec.jinja')).readAsString());
+  final template = Environment().fromString(await File(path.join(rootDir, 'nuspec.jinja')).readAsString());
 
   final pubspec = PubspecParams.fromYaml(yaml);
-  final buildDirectory = canonicalizePubspecPath(
-      path.join('build', 'windows', 'runner', 'Release'))!;
+  final buildDirectory = canonicalizePubspecPath(path.join('build', 'windows', 'runner', 'Release'))!;
 
   // Copy Squirrel.exe into the app dir and squish the setup icon in
   final tgtSquirrel = path.join(buildDirectory, 'squirrel.exe');
@@ -220,30 +183,22 @@ Future<int> main(List<String> args) async {
   }
 
   if (pubspec.setupIcon != null) {
-    await runUtil(
-        'rcedit.exe', ['--set-icon', pubspec.setupIcon!, tgtSquirrel]);
+    await runUtil('rcedit.exe', ['--set-icon', pubspec.setupIcon!, tgtSquirrel]);
   }
 
   // Squish the icon into main exe
-  await runUtil('rcedit.exe', [
-    '--set-icon',
-    pubspec.appIcon,
-    path.join(buildDirectory, '${pubspec.name}.exe')
-  ]);
+  await runUtil('rcedit.exe', ['--set-icon', pubspec.appIcon, path.join(buildDirectory, '${pubspec.name}.exe')]);
 
   // ls -r to get our file tree and create a temp dir
-  final filePaths = await Directory(buildDirectory)
-      .list(recursive: true)
-      .where((f) => f.statSync().type == FileSystemEntityType.file)
-      .map((f) => f.path.replaceFirst(buildDirectory, '').substring(1))
-      .toList();
+  final filePaths =
+      await Directory(buildDirectory).list(recursive: true).where((f) => f.statSync().type == FileSystemEntityType.file).map((f) => f.path.replaceFirst(buildDirectory, '').substring(1)).toList();
 
   final nuspecContent = template
       .render(
           name: pubspec.name,
           title: pubspec.title,
           description: pubspec.description,
-          version: pubspec.version,
+          version: pubspec.customVersion,
           authors: pubspec.authors,
           iconUrl: pubspec.uninstallIconPngUrl,
           additionalFiles: filePaths.map((f) => ({'src': f, 'target': f})))
@@ -253,18 +208,9 @@ Future<int> main(List<String> args) async {
   final tmpDir = await Directory.systemTemp.createTemp('si-');
   final nuspec = path.join(tmpDir.path, 'spec.nuspec');
   await File(nuspec).writeAsString(nuspecContent);
-  await runUtil('nuget.exe', [
-    'pack',
-    nuspec,
-    '-BasePath',
-    buildDirectory,
-    '-OutputDirectory',
-    tmpDir.path,
-    '-NoDefaultExcludes'
-  ]);
+  await runUtil('nuget.exe', ['pack', nuspec, '-BasePath', buildDirectory, '-OutputDirectory', tmpDir.path, '-NoDefaultExcludes']);
 
-  final nupkgFile =
-      (await tmpDir.list().firstWhere((f) => f.path.contains('.nupkg'))).path;
+  final nupkgFile = (await tmpDir.list().firstWhere((f) => f.path.contains('.nupkg'))).path;
 
   // Prepare the release directory
   final releaseDir = Directory(pubspec.releaseDirectory);
@@ -276,10 +222,7 @@ Future<int> main(List<String> args) async {
 
   // Run syncReleases
   if (pubspec.releaseUrl != null) {
-    if (pubspec.releaseUrl!.startsWith('http://') &&
-        Platform.environment[
-                'SQUIRREL_I_KNOW_THAT_USING_HTTP_URLS_IS_REALLY_BAD'] ==
-            null) {
+    if (pubspec.releaseUrl!.startsWith('http://') && Platform.environment['SQUIRREL_I_KNOW_THAT_USING_HTTP_URLS_IS_REALLY_BAD'] == null) {
       throw Exception('''
 You MUST use an HTTPS URL for updates, it is *extremely* unsafe for you to 
 update software via HTTP. If you understand this and you are absolutely sure 
@@ -288,8 +231,7 @@ SQUIRREL_I_KNOW_THAT_USING_HTTP_URLS_IS_REALLY_BAD to 'I hereby promise.'
 ''');
     }
 
-    await runUtil(
-        'SyncReleases.exe', ['-r', releaseDir.path, '-u', pubspec.releaseUrl!]);
+    await runUtil('SyncReleases.exe', ['-r', releaseDir.path, '-u', pubspec.releaseUrl!]);
   }
 
   // Releasify!

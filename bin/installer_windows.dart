@@ -180,7 +180,7 @@ Future<int> main(List<String> args) async {
           name: pubspec.name,
           title: pubspec.title,
           description: pubspec.description,
-          version: '1.0.0.0',
+          version: pubspec.version,
           authors: pubspec.authors,
           iconUrl: pubspec.uninstallIconPngUrl,
           additionalFiles: filePaths.map((f) => ({'src': f, 'target': f})))

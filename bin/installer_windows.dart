@@ -119,7 +119,7 @@ class PubspecParams {
     final name = appPubspec['name'].toString();
     final title = stringOrThrow(windowsSection['appFriendlyName'] ?? appPubspec['title'], 'Your app needs a description!');
     final version = parseVersion(appPubspec['version']);
-    final customVersion = appPubspec['version'].toString();
+    final customVersion = appPubspec['customVersion'].toString();
     final authors = parseAuthor(appPubspec['authors']);
     final description = stringOrThrow(windowsSection['appDescription'] ?? title, 'Your app must have a description');
     final appIcon = canonicalizePubspecPath(stringOrThrow(windowsSection['appIcon'], 'Your app must have an icon'))!;

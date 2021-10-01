@@ -91,7 +91,7 @@ const defaultUninstallPngUrl = 'https://fill/in/this/later';
 class PubspecParams {
   final String name;
   final String title;
-  final String customVersion;
+  final String version;
   final String authors;
   final String description;
   final String appIcon;
@@ -105,8 +105,8 @@ class PubspecParams {
   final bool buildEnterpriseMsiPackage;
   final bool dontBuildDeltas;
 
-  PubspecParams(this.name, this.title, this.customVersion, this.authors, this.description, this.appIcon, this.certificateFile, this.overrideSigningParameters, this.loadingGif,
-      this.uninstallIconPngUrl, this.setupIcon, this.releaseDirectory, this.releaseUrl, this.buildEnterpriseMsiPackage, this.dontBuildDeltas);
+  PubspecParams(this.name, this.title, this.version, this.authors, this.description, this.appIcon, this.certificateFile, this.overrideSigningParameters, this.loadingGif, this.uninstallIconPngUrl,
+      this.setupIcon, this.releaseDirectory, this.releaseUrl, this.buildEnterpriseMsiPackage, this.dontBuildDeltas);
 
   factory PubspecParams.fromYaml(dynamic appPubspec) {
     dynamic windowsSection = appPubspec['squirrel']['windows'];
@@ -117,7 +117,7 @@ class PubspecParams {
 
     final name = appPubspec['name'].toString();
     final title = stringOrThrow(windowsSection['appFriendlyName'] ?? appPubspec['title'], 'Your app needs a description!');
-    final customVersion = appPubspec['customVersion'].toString();
+    final version = parseVersion(appPubspec['version']);
     final authors = parseAuthor(appPubspec['authors']);
     final description = stringOrThrow(windowsSection['appDescription'] ?? title, 'Your app must have a description');
     final appIcon = canonicalizePubspecPath(stringOrThrow(windowsSection['appIcon'], 'Your app must have an icon'))!;
@@ -133,23 +133,8 @@ class PubspecParams {
 
     if (certificateFile != null && overrideSigningParameters != null) {}
 
-    return PubspecParams(
-      name,
-      title,
-      customVersion,
-      authors,
-      description,
-      appIcon,
-      certificateFile,
-      overrideSigningParameters,
-      loadingGif,
-      uninstallIconPngUrl,
-      setupIcon,
-      releaseDirectory,
-      releaseUrl,
-      buildEnterpriseMsiPackage,
-      dontBuildDeltas,
-    );
+    return PubspecParams(name, title, version, authors, description, appIcon, certificateFile, overrideSigningParameters, loadingGif, uninstallIconPngUrl, setupIcon, releaseDirectory, releaseUrl,
+        buildEnterpriseMsiPackage, dontBuildDeltas);
   }
 }
 
@@ -190,13 +175,12 @@ Future<int> main(List<String> args) async {
   final filePaths =
       await Directory(buildDirectory).list(recursive: true).where((f) => f.statSync().type == FileSystemEntityType.file).map((f) => f.path.replaceFirst(buildDirectory, '').substring(1)).toList();
 
-  print(pubspec.customVersion);
   final nuspecContent = template
       .render(
           name: pubspec.name,
           title: pubspec.title,
           description: pubspec.description,
-          version: pubspec.customVersion,
+          version: pubspec.version,
           authors: pubspec.authors,
           iconUrl: pubspec.uninstallIconPngUrl,
           additionalFiles: filePaths.map((f) => ({'src': f, 'target': f})))

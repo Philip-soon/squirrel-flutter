@@ -190,6 +190,7 @@ Future<int> main(List<String> args) async {
   final filePaths =
       await Directory(buildDirectory).list(recursive: true).where((f) => f.statSync().type == FileSystemEntityType.file).map((f) => f.path.replaceFirst(buildDirectory, '').substring(1)).toList();
 
+  print(pubspec.customVersion);
   final nuspecContent = template
       .render(
           name: pubspec.name,

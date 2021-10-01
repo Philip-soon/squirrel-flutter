@@ -91,7 +91,6 @@ const defaultUninstallPngUrl = 'https://fill/in/this/later';
 class PubspecParams {
   final String name;
   final String title;
-  final String version;
   final String customVersion;
   final String authors;
   final String description;
@@ -106,7 +105,7 @@ class PubspecParams {
   final bool buildEnterpriseMsiPackage;
   final bool dontBuildDeltas;
 
-  PubspecParams(this.name, this.title, this.version, this.customVersion, this.authors, this.description, this.appIcon, this.certificateFile, this.overrideSigningParameters, this.loadingGif,
+  PubspecParams(this.name, this.title, this.customVersion, this.authors, this.description, this.appIcon, this.certificateFile, this.overrideSigningParameters, this.loadingGif,
       this.uninstallIconPngUrl, this.setupIcon, this.releaseDirectory, this.releaseUrl, this.buildEnterpriseMsiPackage, this.dontBuildDeltas);
 
   factory PubspecParams.fromYaml(dynamic appPubspec) {
@@ -118,7 +117,6 @@ class PubspecParams {
 
     final name = appPubspec['name'].toString();
     final title = stringOrThrow(windowsSection['appFriendlyName'] ?? appPubspec['title'], 'Your app needs a description!');
-    final version = parseVersion(appPubspec['version']);
     final customVersion = appPubspec['customVersion'].toString();
     final authors = parseAuthor(appPubspec['authors']);
     final description = stringOrThrow(windowsSection['appDescription'] ?? title, 'Your app must have a description');
@@ -138,7 +136,6 @@ class PubspecParams {
     return PubspecParams(
       name,
       title,
-      version,
       customVersion,
       authors,
       description,

@@ -117,7 +117,7 @@ class PubspecParams {
 
     final name = appPubspec['name'].toString();
     final title = stringOrThrow(windowsSection['appFriendlyName'] ?? appPubspec['title'], 'Your app needs a description!');
-    final currentVersion = parseVersion(appPubspec['currentVersion']);
+    final customVersion = parseVersion(appPubspec['customVersion']);
     final authors = parseAuthor(appPubspec['authors']);
     final description = stringOrThrow(windowsSection['appDescription'] ?? title, 'Your app must have a description');
     final appIcon = canonicalizePubspecPath(stringOrThrow(windowsSection['appIcon'], 'Your app must have an icon'))!;
@@ -133,7 +133,7 @@ class PubspecParams {
 
     if (certificateFile != null && overrideSigningParameters != null) {}
 
-    return PubspecParams(name, title, currentVersion, authors, description, appIcon, certificateFile, overrideSigningParameters, loadingGif, uninstallIconPngUrl, setupIcon, releaseDirectory,
+    return PubspecParams(name, title, customVersion, authors, description, appIcon, certificateFile, overrideSigningParameters, loadingGif, uninstallIconPngUrl, setupIcon, releaseDirectory,
         releaseUrl, buildEnterpriseMsiPackage, dontBuildDeltas);
   }
 }
